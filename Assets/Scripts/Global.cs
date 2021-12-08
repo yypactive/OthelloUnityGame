@@ -4,8 +4,15 @@ using System;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class Global : MonoBehaviour {
+public enum GameMode
+{
+    VSHuman,
+    VSAI,
+}
 
+public class Global : MonoBehaviour {
+    //setting
+    public static GameMode gameMode;
     // data
     public static int tilesize = 8;
     public static int[,] tile = new int[8, 8];
@@ -29,7 +36,7 @@ public class Global : MonoBehaviour {
 		
 	}
 
-    public static void RestartGame()
+    public static void RestartGame(GameMode _gameMode = GameMode.VSHuman)
     {
         state_Panel = GameObject.Find("state_Panel");
         turn_Panel = GameObject.Find("turn_Panel");
@@ -37,6 +44,22 @@ public class Global : MonoBehaviour {
         black_Panel = GameObject.Find("black_Panel");
         // turn iterator
         turnIterator = 0;
+        // set mode
+        gameMode = _gameMode;
+        var modeLab = GameObject.Find("mode_lab");
+        if (modeLab != null)
+        {
+            var text = modeLab.transform.GetComponent<Text>();
+            switch (gameMode)
+            {
+                case GameMode.VSHuman:
+                    text.text = "VSHuman"; break;
+                case GameMode.VSAI:
+                    text.text = "VSAI"; break;
+                default:
+                    text.text = ""; break;
+            }
+        }
         // panel
         state_Panel.GetComponentInChildren<statePanel_csharp>().SetState(WhoseTurn());
         state_Panel.GetComponentInChildren<statePanel_csharp>().SetWin(false);
@@ -67,6 +90,18 @@ public class Global : MonoBehaviour {
         Global.gameStart = true;
     }
 
+    public void RestartHumanGame()
+    {
+        Debug.Log("click VSHuman restart btn");
+        RestartGame(GameMode.VSHuman);
+    }
+
+    public void RestartAIGame()
+    {
+        Debug.Log("click VSAI restart btn");
+        RestartGame(GameMode.VSAI);
+    }
+
     public static bool IsVacant(int _x, int _y)
     {
         int value = tile[_y, _x];
@@ -83,6 +118,11 @@ public class Global : MonoBehaviour {
             return 1;
         else
             return -1;
+    }
+
+    public static bool IsAIRound()
+    {
+        return gameMode == GameMode.VSAI && WhoseTurn() == -1;
     }
 
     public static bool IsValid(int _x, int _y)

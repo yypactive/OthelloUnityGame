@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class onclick : MonoBehaviour {
+public class restartBtn_csharp : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {

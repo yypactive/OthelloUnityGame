@@ -20,11 +20,15 @@ public class Global : MonoBehaviour {
     // signal
     public static bool gameStart = false;
     public static int turnIterator = 0;
+    // ai 
+    // public static BaseAIEngine aIEngine;
     // panel
     public static GameObject state_Panel;
     public static GameObject turn_Panel;
     public static GameObject white_Panel;
     public static GameObject black_Panel;
+
+    public static BaseAIEngine aiEngine = new BaseAIEngine();
 
     // Use this for initialization
     void Start () {
@@ -212,6 +216,26 @@ public class Global : MonoBehaviour {
         }
     }
 
+    // just for ai
+    public static bool GetValidList(int _nextchess, ref List<Vector2Int> validList)
+    {
+        var hasValid = false;
+        int nextchess = _nextchess;
+        validList.Clear();
+        for (int i = 0; i < tilesize; ++i)
+        {
+            for (int j = 0; j < tilesize; ++j)
+            {
+                if (tile[i, j] == 0 && IsValid(j, i, nextchess))
+                {
+                    validList.Add(new Vector2Int(j, i));
+                    hasValid = true;
+                }
+            }
+        }
+        return hasValid;
+    }                            
+
     public static bool CheckAllValid(int _nextchess)
     {
         var hasValid = false;
@@ -265,13 +289,28 @@ public class Global : MonoBehaviour {
             return false;
     }
 
-    public static void NextTurn()
+    
+
+    public static void StartNextTurn(int x, int y)
     {
-        // refresh iterator
+        // change gloaltile
+        Global.RefreshTileData(x, y);
+        // refresh
+        GameObject.Find("ChessboardBg").GetComponent<bg_csharp>().RefreshAll();
+        // check end
+        if (Global.CheckEnd()) return;
+        // next turn
+                // refresh iterator
         turnIterator++;
         // refresh panel
         // Debug.LogFormat("whoseTurn: {0}", WhoseTurn());
         state_Panel.GetComponentInChildren<statePanel_csharp>().SetState(WhoseTurn());
         turn_Panel.GetComponentInChildren<numPanel_csharp>().SetNum(turnIterator / 2);
+        // refresh all
+        GameObject.Find("ChessboardBg").GetComponent<bg_csharp>().RefreshAll();
+        if (IsAIRound())
+        {
+            aiEngine.TryAddNewChess();
+        }
     }
 }

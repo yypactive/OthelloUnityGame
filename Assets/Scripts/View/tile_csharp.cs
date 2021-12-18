@@ -47,15 +47,7 @@ public class tile_csharp : MonoBehaviour {
         if (!Global.IsVacant(x, y)) return;
         // check chess is valid
         if (!Global.IsValid(x, y)) return;
-        // change gloaltile
-        Global.RefreshTileData(x, y);
-        // refresh
-        GameObject.Find("ChessboardBg").GetComponent<bg_csharp>().RefreshAll();
-        // check end
-        if (Global.CheckEnd()) return;
-        // next turn
-        Global.NextTurn();
-        GameObject.Find("ChessboardBg").GetComponent<bg_csharp>().RefreshAll();
+        Global.StartNextTurn(x, y);
     }
 
     public void InitValue(int _x, int _y, int _value)

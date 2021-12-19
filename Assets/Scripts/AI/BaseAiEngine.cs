@@ -13,6 +13,10 @@ public class BaseAIEngine
 
     protected int[,] currTile = new int[8, 8];
 
+    protected int currTurn;
+
+    protected static int myTurn = -1;
+    protected static int enemyTurn = 1;
     
 
     public BaseAIEngine ()
@@ -21,6 +25,7 @@ public class BaseAIEngine
 
     public void TryAddNewChess()
     {
+        var currTurn = Global.WhoseTurn();
         mainThreadSynContext = SynchronizationContext.Current;
         Thread thread = new Thread(FindChessPosThread);
         thread.Start();
@@ -60,33 +65,34 @@ public class BaseAIEngine
                 foreach (var potentialPos in potentialPosList)
                 {
                     // add virtual chess here
-                    var currVal = EvaluateCurrBoardState();
+                    var newTile = Global.tile.Clone() as int[,];
+                    var tileCheckHelper = new TileCheckHelper(ref newTile);
+                    tileCheckHelper.AddNewChess(potentialPos.x, potentialPos.y, currTurn);
+                    var currVal = EvaluateCurrBoardState(ref newTile);
                     if (currVal > bestVal)
                     {
                         bestVal = currVal;
                         finalChessPos = potentialPos;
                     }
+                    Debug.LogFormat("[AI] Potential Pos: {0} val: {1}", potentialPos, currVal);
                 }
             }
         else
             Debug.LogError("can not find pos");
         IsRun = false;
-        // Debug.Log("pos val: " + bestVal);
+        Debug.LogFormat("[AI] finalChessPos: {0}", finalChessPos);
         return;
     }
 
     protected List<Vector2Int> GetPotentialPosList()
     {
         List <Vector2Int> validPosList = new List <Vector2Int>();
-        Global.GetValidList(Global.WhoseTurn(), ref validPosList);
+        Global.tileCheckHelper.GetValidList(Global.WhoseTurn(), ref validPosList);
         return validPosList;
     }
 
-    protected int EvaluateCurrBoardState()
+    protected int EvaluateCurrBoardState(ref int[,] tile)
     {
-        var tile = Global.tile;
-        var myTurn = -1;
-        var enemyTurn = 1;
         var result = 0; 
         for (int i = 0; i < Global.tilesize; ++i)
         {

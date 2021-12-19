@@ -20,8 +20,6 @@ public class Global : MonoBehaviour {
     // signal
     public static bool gameStart = false;
     public static int turnIterator = 0;
-    // ai 
-    // public static BaseAIEngine aIEngine;
     // panel
     public static GameObject state_Panel;
     public static GameObject turn_Panel;
@@ -29,6 +27,9 @@ public class Global : MonoBehaviour {
     public static GameObject black_Panel;
 
     public static BaseAIEngine aiEngine = new BaseAIEngine();
+
+    public static TileCheckHelper tileCheckHelper;
+
 
     // Use this for initialization
     void Start () {
@@ -83,6 +84,7 @@ public class Global : MonoBehaviour {
         Global.tile[4, 4] = 1;
         Global.tile[3, 4] = -1;
         Global.tile[4, 3] = -1;
+        tileCheckHelper = new TileCheckHelper(ref Global.tile);
         CheckAllValid(WhoseTurn());
         // refresh
         GameObject.Find("ChessboardBg").GetComponent<bg_csharp>().RefreshAll();
@@ -132,54 +134,13 @@ public class Global : MonoBehaviour {
     public static bool IsValid(int _x, int _y)
     {
         int chess = WhoseTurn();
-        return IsValid(_x, _y, chess);
-    }
-
-    public static bool IsValid(int _x, int _y, int _chess)
-    {
-        // check chess is valid
-        if (_chess != 1 && _chess != -1) return false;
-        // check position
-        for (int dx = -1; dx < 2; ++dx)
-        {
-            for (int dy = -1; dy < 2; ++dy)
-            {
-                if (dx == 0 && dy == 0) continue;
-                if (CheckPosition(_x, _y, _chess,
-                    dx, dy) > 0)
-                {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    public static int CheckPosition(int _x, int _y, int _chess, int _dx, int _dy)
-    {
-        int result = 0;
-        int other = -_chess;
-        int x = _x + _dx;
-        int y = _y + _dy;
-        while (x < tilesize && x >= 0 && y < tilesize && y >= 0)
-        {
-            if (tile[y, x] == 0)
-                return 0;
-            else if (tile[y, x] == other)
-                result++;
-            else if (tile[y, x] == _chess)
-                return result;
-            x += _dx;
-            y += _dy;
-        }
-        return 0;
+        return tileCheckHelper.IsValid(_x, _y, chess);
     }
 
     public static void RefreshTileData(int _x, int _y)
     {
         int chess = WhoseTurn();
-        RefreshTileData(_x, _y, chess);
-        tile[_y, _x] = chess;
+        tileCheckHelper.AddNewChess(_x, _y, chess);
         int wnum = 0;
         int bnum = 0;
         for (int i = 0; i < tilesize; ++i)
@@ -200,42 +161,6 @@ public class Global : MonoBehaviour {
         black_Panel.GetComponentInChildren<numPanel_csharp>().SetNum(bnum);
     }
 
-    public static void RefreshTileData(int _x, int _y, int _chess)
-    {
-        for (int dx = -1; dx < 2; ++dx)
-        {
-            for (int dy = -1; dy < 2; ++dy)
-            {
-                if (dx == 0 && dy == 0) continue;
-                int len = CheckPosition(_x, _y, _chess, dx, dy);
-                for (int i = 1; i <= len; ++i)
-                {
-                    tile[_y + i * dy, _x + i * dx] = _chess;
-                }
-            }
-        }
-    }
-
-    // just for ai
-    public static bool GetValidList(int _nextchess, ref List<Vector2Int> validList)
-    {
-        var hasValid = false;
-        int nextchess = _nextchess;
-        validList.Clear();
-        for (int i = 0; i < tilesize; ++i)
-        {
-            for (int j = 0; j < tilesize; ++j)
-            {
-                if (tile[i, j] == 0 && IsValid(j, i, nextchess))
-                {
-                    validList.Add(new Vector2Int(j, i));
-                    hasValid = true;
-                }
-            }
-        }
-        return hasValid;
-    }                            
-
     public static bool CheckAllValid(int _nextchess)
     {
         var hasValid = false;
@@ -244,7 +169,7 @@ public class Global : MonoBehaviour {
         {
             for (int j = 0; j < tilesize; ++j)
             {
-                if (tile[i, j] == 0 && IsValid(j, i, nextchess))
+                if (tile[i, j] == 0 && tileCheckHelper.IsValid(j, i, nextchess))
                 {
                     validTile[i, j] = 1;
                     hasValid = true;
@@ -255,7 +180,6 @@ public class Global : MonoBehaviour {
         }
         return hasValid;
     }
-
 
     public static bool IsEnd(int _nextchess)
     {
@@ -289,10 +213,9 @@ public class Global : MonoBehaviour {
             return false;
     }
 
-    
-
     public static void StartNextTurn(int x, int y)
     {
+        Debug.LogFormat("StartNextTurn: x: {0} y: {1}", x, y);
         // change gloaltile
         Global.RefreshTileData(x, y);
         // refresh

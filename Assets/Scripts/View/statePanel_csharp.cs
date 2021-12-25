@@ -19,7 +19,22 @@ public class statePanel_csharp : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-
+        if (Global.IsAIRound())
+        {
+            var text = "";
+            if (state == 1)
+            {
+                text = "黑子";
+            }
+            else if (state == -1)
+            {
+                text = "白子";
+            }
+            var currTs = UI.GetCurrClientTimeStamp();
+            text = text + String.Format("<size=30>({0})</size>", currTs - Global.aiEngineStartTs);
+            Text t = numLabel.GetComponentInChildren<Text>();
+            t.text = text;
+        }
 	}
 
     void Refresh()

@@ -29,6 +29,7 @@ public class Global : MonoBehaviour {
     public static GameObject black_Panel;
 
     public static BaseAIEngine aiEngine = new MaxMinSearchAiEngine();
+    public static long aiEngineStartTs = 0;
 
     public static TileCheckHelper tileCheckHelper;
 
@@ -131,7 +132,7 @@ public class Global : MonoBehaviour {
 
     public static bool IsAIRound()
     {
-        return gameMode == GameMode.VSAI && WhoseTurn() == -1;
+        return gameMode == GameMode.VSAI && WhoseTurn() == -1 && gameStart;
     }
 
     public static bool IsValid(int _x, int _y)
@@ -218,7 +219,9 @@ public class Global : MonoBehaviour {
 
     public static void StartNextTurn(int x, int y)
     {
+#if TEST
         Debug.LogFormat("StartNextTurn: x: {0} y: {1}", x, y);
+#endif
         Global.currChess = new Vector2Int(x, y);
         // change gloaltile
         Global.RefreshTileData(x, y);
@@ -230,14 +233,15 @@ public class Global : MonoBehaviour {
                 // refresh iterator
         turnIterator++;
         // refresh panel
-        // Debug.LogFormat("whoseTurn: {0}", WhoseTurn());
         state_Panel.GetComponentInChildren<statePanel_csharp>().SetState(WhoseTurn());
         turn_Panel.GetComponentInChildren<numPanel_csharp>().SetNum(turnIterator / 2);
         // refresh all
         GameObject.Find("ChessboardBg").GetComponent<bg_csharp>().RefreshAll();
         if (IsAIRound())
         {
+            aiEngineStartTs = UI.GetCurrClientTimeStamp();
             aiEngine.TryAddNewChess();
+            
         }
     }
 }

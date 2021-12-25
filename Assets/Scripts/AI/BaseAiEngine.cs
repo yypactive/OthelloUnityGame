@@ -13,12 +13,9 @@ public class BaseAIEngine
 
     protected int[,] currTile = new int[8, 8];
 
-    protected int aiStartTurn;
-
-    protected static int myTurn = -1;
-    protected static int enemyTurn = 1;
+    protected int myTurnNum;
+    protected int enemyTurnNum;
     
-
     public BaseAIEngine ()
     {
     }
@@ -33,7 +30,7 @@ public class BaseAIEngine
     private void FindChessPosThread()
     {
         var startTime = UI.GetCurrClientMilliTimeStamp();
-        Debug.LogFormat("#BaseAIEngine# startTime: {0}", startTime);
+        Debug.LogFormat("#AIEngine# startTime: {0}", startTime);
         InitCurrStatus();
         while (true)
         {
@@ -42,7 +39,7 @@ public class BaseAIEngine
             if (!IsRun || currTime - startTime > waitTime * 1000)
             {
                 var endTime = UI.GetCurrClientMilliTimeStamp();
-                Debug.LogFormat("#BaseAIEngine# endTime: {0} deltaTime {1}", endTime, endTime - startTime);
+                Debug.LogFormat("#AIEngine# endTime: {0} deltaTime {1}", endTime, endTime - startTime);
                 mainThreadSynContext.Post(
                     new SendOrPostCallback(_RealAddNewChess), null);
                 return;
@@ -67,19 +64,23 @@ public class BaseAIEngine
                     var newTile = Global.tile.Clone() as int[,];
                     var tileCheckHelper = new TileCheckHelper(ref newTile);
                     tileCheckHelper.AddNewChess(potentialPos.x, potentialPos.y, Global.WhoseTurn());
-                    var currVal = EvaluateCurrBoardState(ref newTile);
+                    var currVal = EvaluateCurrBoardState(ref newTile, Global.WhoseTurn());
                     if (currVal > bestVal)
                     {
                         bestVal = currVal;
                         finalChessPos = potentialPos;
                     }
+#if TEST
                     Debug.LogFormat("[AI] Potential Pos: {0} val: {1}", potentialPos, currVal);
+#endif
                 }
             }
         else
             Debug.LogError("can not find pos");
         IsRun = false;
+#if TEST
         Debug.LogFormat("[AI] finalChessPos: {0}", finalChessPos);
+#endif
         return;
     }
 
@@ -87,14 +88,22 @@ public class BaseAIEngine
     {
         List <Vector2Int> validPosList = new List <Vector2Int>();
         tileCheckHelper.GetValidList(turn, ref validPosList);
+        validPosList.Sort((a, b) => 
+        {
+            var half = Global.tilesize;
+            var asize = Math.Abs(a.x - half) + Math.Abs(a.y - half);
+            var bsize = Math.Abs(b.x - half) + Math.Abs(b.y - half);
+            return bsize.CompareTo(asize);
+        });
         return validPosList;
     }
 
-    protected int EvaluateCurrBoardState(ref int[,] tile)
+    protected int EvaluateCurrBoardState(ref int[,] tile, int myTurn)
     {
-        var result = 0; 
-        var myTurnNum = 0;
-        var enemyTurnNum = 0;
+        var result = 0;
+        var enemyTurn = - myTurn;
+        myTurnNum = 0;
+        enemyTurnNum = 0;
         for (int i = 0; i < Global.tilesize; ++i)
         {
             for (int j = 0; j < Global.tilesize; ++j)

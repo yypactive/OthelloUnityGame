@@ -13,7 +13,7 @@ public class BaseAIEngine
 
     protected int[,] currTile = new int[8, 8];
 
-    protected int currTurn;
+    protected int aiStartTurn;
 
     protected static int myTurn = -1;
     protected static int enemyTurn = 1;
@@ -25,7 +25,6 @@ public class BaseAIEngine
 
     public void TryAddNewChess()
     {
-        var currTurn = Global.WhoseTurn();
         mainThreadSynContext = SynchronizationContext.Current;
         Thread thread = new Thread(FindChessPosThread);
         thread.Start();
@@ -58,7 +57,7 @@ public class BaseAIEngine
 
     protected virtual void IterateChessPos()
     {
-        var potentialPosList = GetPotentialPosList();
+        var potentialPosList = GetPotentialPosList(Global.tileCheckHelper, Global.WhoseTurn());
         var bestVal = - Global.tilesize * Global.tilesize;
         if (potentialPosList.Count > 0)
             {
@@ -67,7 +66,7 @@ public class BaseAIEngine
                     // add virtual chess here
                     var newTile = Global.tile.Clone() as int[,];
                     var tileCheckHelper = new TileCheckHelper(ref newTile);
-                    tileCheckHelper.AddNewChess(potentialPos.x, potentialPos.y, currTurn);
+                    tileCheckHelper.AddNewChess(potentialPos.x, potentialPos.y, Global.WhoseTurn());
                     var currVal = EvaluateCurrBoardState(ref newTile);
                     if (currVal > bestVal)
                     {
@@ -84,16 +83,18 @@ public class BaseAIEngine
         return;
     }
 
-    protected List<Vector2Int> GetPotentialPosList()
+    protected List<Vector2Int> GetPotentialPosList(TileCheckHelper tileCheckHelper, int turn)
     {
         List <Vector2Int> validPosList = new List <Vector2Int>();
-        Global.tileCheckHelper.GetValidList(Global.WhoseTurn(), ref validPosList);
+        tileCheckHelper.GetValidList(turn, ref validPosList);
         return validPosList;
     }
 
     protected int EvaluateCurrBoardState(ref int[,] tile)
     {
         var result = 0; 
+        var myTurnNum = 0;
+        var enemyTurnNum = 0;
         for (int i = 0; i < Global.tilesize; ++i)
         {
             for (int j = 0; j < Global.tilesize; ++j)
@@ -101,13 +102,16 @@ public class BaseAIEngine
                 if (tile[i, j] == myTurn)
                 {
                     result ++;
+                    myTurnNum ++;
                 }
                 else if (tile[i, j] == enemyTurn)
                 {
                     result --;
+                    enemyTurnNum ++;
                 }
             }
         }
+        // Debug.LogFormat("[AI] myTurnNum: {0} enemyTurnNum: {1}", myTurnNum, enemyTurnNum);
         return result;
     }
 

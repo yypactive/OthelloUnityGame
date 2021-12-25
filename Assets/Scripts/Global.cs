@@ -17,6 +17,8 @@ public class Global : MonoBehaviour {
     public static int tilesize = 8;
     public static int[,] tile = new int[8, 8];
     public static int[,] validTile = new int[8, 8];
+
+    public static Vector2Int currChess;
     // signal
     public static bool gameStart = false;
     public static int turnIterator = 0;
@@ -26,7 +28,7 @@ public class Global : MonoBehaviour {
     public static GameObject white_Panel;
     public static GameObject black_Panel;
 
-    public static BaseAIEngine aiEngine = new BaseAIEngine();
+    public static BaseAIEngine aiEngine = new MaxMinSearchAiEngine();
 
     public static TileCheckHelper tileCheckHelper;
 
@@ -71,6 +73,7 @@ public class Global : MonoBehaviour {
         turn_Panel.GetComponentInChildren<numPanel_csharp>().SetNum(turnIterator);
         white_Panel.GetComponentInChildren<numPanel_csharp>().SetNum(turnIterator);
         black_Panel.GetComponentInChildren<numPanel_csharp>().SetNum(turnIterator);
+        Global.currChess = new Vector2Int(-1, -1);
         //tile array
         // 1 means black, -1 means white
         for (int i = 0; i < Global.tilesize; ++i)
@@ -216,6 +219,7 @@ public class Global : MonoBehaviour {
     public static void StartNextTurn(int x, int y)
     {
         Debug.LogFormat("StartNextTurn: x: {0} y: {1}", x, y);
+        Global.currChess = new Vector2Int(x, y);
         // change gloaltile
         Global.RefreshTileData(x, y);
         // refresh

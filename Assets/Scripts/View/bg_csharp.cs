@@ -80,7 +80,8 @@ public class bg_csharp : MonoBehaviour {
             tile_csharp tcsharp = tmptile.GetComponentInChildren<tile_csharp>();
             int x = tcsharp.GetPositionX();
             int y = tcsharp.GetPositionY();
-            tcsharp.RefreshTile(Global.tile[y,x], Global.validTile[y,x]);
+            bool isCurrentChess = Global.currChess.x == x && Global.currChess.y == y;
+            tcsharp.RefreshTile(Global.tile[y,x], Global.validTile[y,x], isCurrentChess);
             // Debug.LogFormat("finish tile: {0} {1}", y, x);
         }
     }

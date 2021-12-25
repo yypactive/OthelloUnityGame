@@ -47,6 +47,8 @@ public class tile_csharp : MonoBehaviour {
         if (!Global.IsVacant(x, y)) return;
         // check chess is valid
         if (!Global.IsValid(x, y)) return;
+        // check is ai round
+        if (Global.IsAIRound()) return;
         Global.StartNextTurn(x, y);
     }
 
@@ -67,8 +69,27 @@ public class tile_csharp : MonoBehaviour {
         return y;
     }
 
-    public void RefreshTile(int _value, int _validValue)
+    public void RefreshTile(int _value, int _validValue, bool isCurretnChess)
     {
+        var tileImage = gameObject.GetComponent<Image>();
+        if (tileImage != null)
+        {
+            Color color;
+            // Update color
+            if (isCurretnChess)
+            {
+                ColorUtility.TryParseHtmlString("#d5c85D", out color);
+            }
+            else if (_validValue == 1)
+            {
+                ColorUtility.TryParseHtmlString("#E5585D", out color);
+            }
+            else
+            {
+                ColorUtility.TryParseHtmlString("#9AB4BA", out color);
+            }
+            tileImage.color = color;
+        }
         if (value == _value && validValue == _validValue)
             return;
         if (value != 0)
@@ -100,21 +121,6 @@ public class tile_csharp : MonoBehaviour {
                     );
                 cloneChess.transform.localScale = new Vector3(chessScalex, chessScaley, 1);
             }
-        }
-        var tileImage = gameObject.GetComponent<Image>();
-        if (tileImage != null)
-        {
-            Color color;
-            // Update color
-            if (_validValue == 1)
-            {
-                ColorUtility.TryParseHtmlString("#E5585D", out color);
-            }
-            else
-            {
-                ColorUtility.TryParseHtmlString("#9AB4BA", out color);
-            }
-            tileImage.color = color;
         }
         value = _value;
         validValue = _validValue;

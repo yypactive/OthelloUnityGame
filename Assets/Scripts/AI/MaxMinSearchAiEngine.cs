@@ -10,10 +10,10 @@ public class MaxMinSearchAiEngine: BaseAIEngine
 {
 
 #if TEST
-    protected static readonly int searchDeepth = 4;
+    protected static readonly int searchDeepth = 2;
 #else
-    // 10 is okay
-    protected static readonly int searchDeepth = 10;
+    // 8 is okay for android phone
+    protected static readonly int searchDeepth = 8;
 #endif
     // reference
     // https://github.com/lihongxun945/myblog/issues/13

@@ -84,17 +84,32 @@ public class BaseAIEngine
         return;
     }
 
-    protected List<Vector2Int> GetPotentialPosList(TileCheckHelper tileCheckHelper, int turn)
+    int GetPosSortVal(Vector2Int a)
     {
+       var half = Global.tilesize - 1;
+       var x = Math.Abs((a.x << 1) - half);
+       var y = Math.Abs((a.y << 1) - half);
+       var val = x + y + Math.Max(x, y);
+       return val;
+    }
+
+    int SortPotentialPos(Vector2Int a, Vector2Int b)
+    {   
+        var asize = GetPosSortVal(a);
+        var bsize = GetPosSortVal(b);
+        return bsize.CompareTo(asize);
+    } 
+
+    protected List<Vector2Int> GetPotentialPosList(TileCheckHelper tileCheckHelper, int turn)
+    {       
         List <Vector2Int> validPosList = new List <Vector2Int>();
         tileCheckHelper.GetValidList(turn, ref validPosList);
-        validPosList.Sort((a, b) => 
-        {
-            var half = Global.tilesize;
-            var asize = Math.Abs(a.x - half) + Math.Abs(a.y - half);
-            var bsize = Math.Abs(b.x - half) + Math.Abs(b.y - half);
-            return bsize.CompareTo(asize);
-        });
+        validPosList.Sort(SortPotentialPos);
+
+#if TEST
+            Debug.LogFormat("[AI] pos List: {0}",  String.Join(" ", validPosList));
+#endif
+
         return validPosList;
     }
 

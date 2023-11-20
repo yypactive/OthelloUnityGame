@@ -6,6 +6,7 @@ using UnityEngine.UI;
 public class tile_csharp : MonoBehaviour {
     //object
     public GameObject tile;
+    public GameObject currChess;
     public GameObject whiteChess;
     public GameObject blackChess;
     // const 
@@ -19,6 +20,9 @@ public class tile_csharp : MonoBehaviour {
     public int y;
     public int value = 0;
     public int validValue = 0;
+
+    float animTs = 0;
+    static readonly float animTime = 0.1f;
     // Use this for initialization
     void Start () {
         // const 
@@ -34,10 +38,6 @@ public class tile_csharp : MonoBehaviour {
         chessScaley = 0.8F;
         // value
     }
-	
-	// Update is called once per frame
-	void Update () {
-	}
 
     public void OnButtonClick()
     {
@@ -92,11 +92,13 @@ public class tile_csharp : MonoBehaviour {
         }
         if (value == _value && validValue == _validValue)
             return;
+        EndAnim();
         if (value != 0)
         // remove old chess
         {
             for (int i = 0; i < transform.childCount; ++i)
                 Destroy(transform.GetChild(i).gameObject);
+            currChess = null;
         }
 
         if (_value != 0)
@@ -111,6 +113,7 @@ public class tile_csharp : MonoBehaviour {
                     new Vector3(posx + chessSpace, posy + chessSpace, 0)
                     );
                 cloneChess.transform.localScale = new Vector3(chessScalex, chessScaley, 1);
+                currChess = cloneChess;
             }
             else if (_value == 1)
             {
@@ -120,7 +123,10 @@ public class tile_csharp : MonoBehaviour {
                     new Vector3(posx + chessSpace, posy + chessSpace, 0)
                     );
                 cloneChess.transform.localScale = new Vector3(chessScalex, chessScaley, 1);
+                currChess = cloneChess;
             }
+            StartAnim();
+            
         }
         value = _value;
         validValue = _validValue;
@@ -134,6 +140,50 @@ public class tile_csharp : MonoBehaviour {
         else
             return false;
     }
+
+    public bool InAnimTime()
+    {
+        var currTime = UnityEngine.Time.time;
+        return currTime - animTs <= animTime;
+    }
+
+    public float GetAnimPercent()
+    {
+        var currTime = UnityEngine.Time.time;
+        return (currTime - animTs) / animTime;
+    }
+
+    public void StartAnim()
+    {
+        animTs = UnityEngine.Time.time;
+        UpdateAnim(0);
+    }
+
+    public void EndAnim()
+    {
+        animTs = 0;
+        UpdateAnim(1);
+    }
+
+    public void UpdateAnim(float percent)
+    {
+        if (currChess == null)
+            return;
+        percent = Mathf.Clamp01(percent);
+        currChess.transform.localEulerAngles = new Vector3 (0.0f, percent * 180, 0.0f); 
+    }
+    	
+	// Update is called once per frame
+	void Update () {
+        if (InAnimTime())
+        {
+            UpdateAnim(GetAnimPercent());
+        }
+        else if (animTs > 0.00001)
+        {
+            EndAnim();
+        }
+	}
 
 
 }

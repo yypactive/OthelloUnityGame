@@ -6,7 +6,7 @@ using UnityEngine;
 
 public class BaseAIEngine
 {
-    public static int waitTime = 5;
+    public static int waitTime = 1;
     public bool IsRun {get; protected set;}
     private SynchronizationContext mainThreadSynContext;
     protected Vector2Int finalChessPos;
@@ -35,15 +35,23 @@ public class BaseAIEngine
         while (true)
         {
             IterateChessPos();
-            var currTime = UI.GetCurrClientMilliTimeStamp();
-            if (!IsRun || currTime - startTime > waitTime * 1000)
-            {
-                var endTime = UI.GetCurrClientMilliTimeStamp();
-                Debug.LogFormat("#AIEngine# endTime: {0} deltaTime {1}", endTime, endTime - startTime);
-                mainThreadSynContext.Post(
-                    new SendOrPostCallback(_RealAddNewChess), null);
-                return;
-            }
+            if (!IsRun)
+                while (true)
+                {
+                    var currTime = UI.GetCurrClientMilliTimeStamp();
+                    if (currTime - startTime > waitTime * 1000)
+                    {
+                        var endTime = UI.GetCurrClientMilliTimeStamp();
+                        Debug.LogFormat("#AIEngine# endTime: {0} deltaTime {1}", endTime, endTime - startTime);
+                        mainThreadSynContext.Post(
+                            new SendOrPostCallback(_RealAddNewChess), null);
+                        return;
+                    }
+                    else
+                    {
+                        Thread.Sleep(100);
+                    }
+                }
         }
     }
 

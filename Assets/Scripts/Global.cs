@@ -25,6 +25,7 @@ public class Global : MonoBehaviour {
     // panel
     public static GameObject state_Panel;
     public static GameObject turn_Panel;
+    public static GameObject valid_Panel;
     public static GameObject white_Panel;
     public static GameObject black_Panel;
 
@@ -48,6 +49,7 @@ public class Global : MonoBehaviour {
     {
         state_Panel = GameObject.Find("state_Panel");
         turn_Panel = GameObject.Find("turn_Panel");
+        valid_Panel = GameObject.Find("valid_Panel");
         white_Panel = GameObject.Find("white_Panel");
         black_Panel = GameObject.Find("black_Panel");
         // turn iterator
@@ -72,6 +74,7 @@ public class Global : MonoBehaviour {
         state_Panel.GetComponentInChildren<statePanel_csharp>().SetState(WhoseTurn());
         state_Panel.GetComponentInChildren<statePanel_csharp>().SetWin(false);
         turn_Panel.GetComponentInChildren<numPanel_csharp>().SetNum(turnIterator);
+        valid_Panel.GetComponentInChildren<numPanel_csharp>().SetNum(0);
         white_Panel.GetComponentInChildren<numPanel_csharp>().SetNum(turnIterator);
         black_Panel.GetComponentInChildren<numPanel_csharp>().SetNum(turnIterator);
         Global.currChess = new Vector2Int(-1, -1);
@@ -167,7 +170,7 @@ public class Global : MonoBehaviour {
 
     public static bool CheckAllValid(int _nextchess)
     {
-        var hasValid = false;
+        var validCnt = 0;
         int nextchess = _nextchess;
         for (int i = 0; i < tilesize; ++i)
         {
@@ -176,24 +179,28 @@ public class Global : MonoBehaviour {
                 if (tile[i, j] == 0 && tileCheckHelper.IsValid(j, i, nextchess))
                 {
                     validTile[i, j] = 1;
-                    hasValid = true;
+                    validCnt++;
                 }
                 else
                     validTile[i, j] = 0;
             }
         }
-        return hasValid;
+        valid_Panel.GetComponentInChildren<numPanel_csharp>().SetNum(validCnt);
+        return validCnt > 0;
     }
 
     public static bool IsEnd(int _nextchess)
     {
+        return !CheckAllValid(_nextchess) &&  !CheckAllValid(-_nextchess);
+    }
+
+    public static bool IsJumped(int _nextchess)
+    {
         return !CheckAllValid(_nextchess);
     }
 
-    public static bool CheckEnd()
+    public static void EndCurrGame()
     {
-        int nextchess = -WhoseTurn();
-        if (IsEnd(nextchess))
         {
             gameStart = false;
             state_Panel.GetComponentInChildren<statePanel_csharp>().SetWin(true);
@@ -211,10 +218,7 @@ public class Global : MonoBehaviour {
             {
                 state_Panel.GetComponentInChildren<statePanel_csharp>().SetState(0);
             }
-            return true;
         }
-        else
-            return false;
     }
 
     public static void StartNextTurn(int x, int y)
@@ -227,21 +231,53 @@ public class Global : MonoBehaviour {
         Global.RefreshTileData(x, y);
         // refresh
         GameObject.Find("ChessboardBg").GetComponent<bg_csharp>().RefreshAll();
-        // check end
-        if (Global.CheckEnd()) return;
-        // next turn
-                // refresh iterator
-        turnIterator++;
+        Global.JumpNextTurn();
+    }
+
+    public static void JumpNextTurn()
+    {
+#if TEST
+        Debug.LogFormat("JumpNextTurn");
+#endif
+
+        int nextchess = -WhoseTurn();
+        if (Global.IsEnd(nextchess))
+        {
+            Global.EndCurrGame();
+            return;
+        }
+        var jumped = false;
+        // if no valid pos then jump  
+        if (Global.IsJumped(nextchess))
+        {
+            // jump turn
+            // refresh iterator
+            turnIterator++;
+            jumped = true;
+        }
+        else
+        {
+            // next turn
+            // refresh iterator
+            turnIterator++;
+        }
+
         // refresh panel
-        state_Panel.GetComponentInChildren<statePanel_csharp>().SetState(WhoseTurn());
+        state_Panel.GetComponentInChildren<statePanel_csharp>().SetState(WhoseTurn(), jumped);
         turn_Panel.GetComponentInChildren<numPanel_csharp>().SetNum(turnIterator / 2);
         // refresh all
         GameObject.Find("ChessboardBg").GetComponent<bg_csharp>().RefreshAll();
         if (IsAIRound())
         {
-            aiEngineStartTs = UI.GetCurrClientTimeStamp();
-            aiEngine.TryAddNewChess();
-            
+            if (jumped)
+            {
+                JumpNextTurn();
+            }
+            else
+            {
+                aiEngineStartTs = UI.GetCurrClientTimeStamp();
+                aiEngine.TryAddNewChess();  
+            }
         }
     }
 }

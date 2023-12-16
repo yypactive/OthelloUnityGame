@@ -7,10 +7,14 @@ using UnityEngine.UI;
 public class statePanel_csharp : MonoBehaviour {
 
     public GameObject panel;
-    public GameObject label;
-    public GameObject numLabel;
+    public Text label;
+    public Text numLabel;
+
+    public Button jumpBtn;
 
     int state;
+    // jump tag
+    bool jumped = false;
     // Use this for initialization
     void Start () {
         state = 0;
@@ -21,50 +25,51 @@ public class statePanel_csharp : MonoBehaviour {
 	void Update () {
         if (Global.IsAIRound())
         {
-            var text = "";
-            if (state == 1)
-            {
-                text = "黑子";
-            }
-            else if (state == -1)
-            {
-                text = "白子";
-            }
-            var currTs = UI.GetCurrClientTimeStamp();
-            text = text + String.Format("<size=30>({0})</size>", currTs - Global.aiEngineStartTs);
-            Text t = numLabel.GetComponentInChildren<Text>();
-            t.text = text;
+            var titleStr = GetTitle();
+            numLabel.text = titleStr;
         }
 	}
 
     void Refresh()
     {
-        Text t = numLabel.GetComponentInChildren<Text>();
+        var titleStr = GetTitle();
+        numLabel.text = titleStr;
+        jumpBtn.gameObject.SetActive(jumped);
+    }
+
+    public string GetTitle()
+    {
+        var titleStr = "";
         // 1 means black, -1 means white
         if (state == 1)
         {
-            t.text = "黑子";
+            titleStr = "<b>黑子</b>";    
         }
         else if (state == -1)
         {
-            t.text = "白子";
-        }
-        else if (state == 0)
-        {
-            t.text = "双方";
+            titleStr = "白子";  
         }
         else
         {
-            t.text = "ERROR";
+            titleStr = "ERROR";
         }
+
+        if (Global.IsAIRound())
+        {
+            var currTs = UI.GetCurrClientTimeStamp();
+            titleStr = titleStr + String.Format("<size=30>({0})</size>", currTs - Global.aiEngineStartTs);
+        }
+
+        return titleStr;
     }
 
     public int GetState() {
         return state;
     }
 
-    public void SetState (int _num) {
+    public void SetState (int _num, bool _jumped = false) {
         state = _num;
+        jumped = _jumped;
         Refresh();
     }
 
@@ -72,11 +77,11 @@ public class statePanel_csharp : MonoBehaviour {
     {
         if (_win)
         {
-            label.GetComponentInChildren<Text>().text = "胜   利: ";
+            label.text = "<b>胜   利</b>: ";
         }
         else
         {
-            label.GetComponentInChildren<Text>().text = "回   合: ";
+            label.text = "回   合: ";
         }
     }
 }

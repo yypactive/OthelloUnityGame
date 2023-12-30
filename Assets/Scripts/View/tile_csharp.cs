@@ -108,7 +108,7 @@ public class tile_csharp : MonoBehaviour {
             if (_value == -1)
             {
                 GameObject cloneChess = GameObject.Instantiate(whiteChess);
-                cloneChess.transform.parent = tile.transform;
+                cloneChess.transform.SetParent(tile.transform);
                 cloneChess.transform.Translate(
                     new Vector3(posx + chessSpace, posy + chessSpace, 0)
                     );
@@ -118,7 +118,7 @@ public class tile_csharp : MonoBehaviour {
             else if (_value == 1)
             {
                 GameObject cloneChess = GameObject.Instantiate(blackChess);
-                cloneChess.transform.parent = tile.transform;
+                cloneChess.transform.SetParent(tile.transform);
                 cloneChess.transform.Translate(
                     new Vector3(posx + chessSpace, posy + chessSpace, 0)
                     );

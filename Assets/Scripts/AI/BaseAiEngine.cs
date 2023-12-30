@@ -15,6 +15,8 @@ public class BaseAIEngine
 
     protected int myTurnNum;
     protected int enemyTurnNum;
+
+    protected int startTime = 0;
     
     public BaseAIEngine ()
     {
@@ -32,32 +34,24 @@ public class BaseAIEngine
         var startTime = UI.GetCurrClientMilliTimeStamp();
         Debug.LogFormat("#AIEngine# startTime: {0}", startTime);
         InitCurrStatus();
-        while (true)
-        {
-            IterateChessPos();
-            if (!IsRun)
-                while (true)
-                {
-                    var currTime = UI.GetCurrClientMilliTimeStamp();
-                    if (currTime - startTime > waitTime * 1000)
-                    {
-                        var endTime = UI.GetCurrClientMilliTimeStamp();
-                        Debug.LogFormat("#AIEngine# endTime: {0} deltaTime {1}", endTime, endTime - startTime);
-                        mainThreadSynContext.Post(
-                            new SendOrPostCallback(_RealAddNewChess), null);
-                        return;
-                    }
-                    else
-                    {
-                        Thread.Sleep(100);
-                    }
-                }
-        }
+        IterateChessPos();
+        IsRun = false;
+        var endTime = UI.GetCurrClientMilliTimeStamp();
+        Debug.LogFormat("#AIEngine# endTime: {0} deltaTime {1}", endTime, endTime - startTime);
+        mainThreadSynContext.Post(
+            new SendOrPostCallback(_RealAddNewChess), null);
+        return;
     }
 
     protected virtual void InitCurrStatus()
     {
         IsRun = true;
+    }
+
+    protected virtual bool CheckEnd()
+    {
+        var currTime = UI.GetCurrClientMilliTimeStamp();
+        return currTime - startTime > waitTime * 1000;
     }
 
     protected virtual void IterateChessPos()
@@ -85,7 +79,6 @@ public class BaseAIEngine
             }
         else
             Debug.LogError("can not find pos");
-        IsRun = false;
 #if TEST
         Debug.LogFormat("[AI] finalChessPos: {0}", finalChessPos);
 #endif

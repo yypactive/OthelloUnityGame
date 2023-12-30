@@ -13,7 +13,7 @@ public class MaxMinSearchAiEngine: BaseAIEngine
     protected static readonly int searchDeepth = 2;
 #else
     // 8 is okay for android phone
-    protected static readonly int searchDeepth = 8;
+    protected static readonly int searchDeepth = 9;
 #endif
     // reference
     // https://github.com/lihongxun945/myblog/issues/13
@@ -22,7 +22,6 @@ public class MaxMinSearchAiEngine: BaseAIEngine
     {
         // main procedure
         finalChessPos = MaxMinValueSearch(searchDeepth);
-        IsRun = false;
         return;
     }
 
@@ -50,6 +49,8 @@ public class MaxMinSearchAiEngine: BaseAIEngine
             }
             // TODO
             // remove chess
+            if (CheckEnd())
+                break;
         }
         Debug.LogFormat("#AIEngine# bestVal: {0}", bestVal);
         var ran = new System.Random();
@@ -96,7 +97,7 @@ public class MaxMinSearchAiEngine: BaseAIEngine
             alpha = Math.Max(bestVal, alpha);
 
             // alpha-beta cut
-            if (newVal >= beta)
+            if (newVal > beta || (searchDeepth-deep>1) && newVal == beta)
             {
                 return newVal;
             }

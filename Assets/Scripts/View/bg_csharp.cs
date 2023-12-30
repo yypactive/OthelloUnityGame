@@ -52,7 +52,7 @@ public class bg_csharp : MonoBehaviour {
                 scalex = tilesize / tileRect.rect.width;
                 scaley = tilesize / tileRect.rect.height;
 
-                cloneTile.transform.parent = bg.transform;
+                cloneTile.transform.SetParent(bg.transform);
                 var pos = new Vector3(offsetx + j * (tilesize + space) + 0.05f * bgw
                     , offsety + i * (tilesize + space) - 0.45f * bgh
                     , 0);

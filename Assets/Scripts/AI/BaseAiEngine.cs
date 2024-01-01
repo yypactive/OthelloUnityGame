@@ -1,3 +1,5 @@
+// #define TEST
+
 using System;
 using System.Threading;
 using System.Collections;
@@ -6,7 +8,7 @@ using UnityEngine;
 
 public class BaseAIEngine
 {
-    public static int waitTime = 1;
+    public static int waitTime = 10;
     public bool IsRun {get; protected set;}
     private SynchronizationContext mainThreadSynContext;
     protected Vector2Int finalChessPos;
@@ -16,7 +18,7 @@ public class BaseAIEngine
     protected int myTurnNum;
     protected int enemyTurnNum;
 
-    protected int startTime = 0;
+    protected long startTime = 0;
     
     public BaseAIEngine ()
     {
@@ -31,7 +33,7 @@ public class BaseAIEngine
 
     private void FindChessPosThread()
     {
-        var startTime = UI.GetCurrClientMilliTimeStamp();
+        startTime = UI.GetCurrClientMilliTimeStamp();
         Debug.LogFormat("#AIEngine# startTime: {0}", startTime);
         InitCurrStatus();
         IterateChessPos();

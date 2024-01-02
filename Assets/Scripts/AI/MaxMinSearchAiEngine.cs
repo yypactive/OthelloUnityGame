@@ -1,4 +1,4 @@
-#define TEST
+// #define TEST
 
 using System;
 using System.Collections;
@@ -10,10 +10,10 @@ public class MaxMinSearchAiEngine: BaseAIEngine
 {
 
 #if TEST
-    protected static readonly int searchDeepth = 2;
+    protected static readonly int searchDeepth = 3;
 #else
     // 8 is okay for android phone
-    protected static readonly int searchDeepth = 9;
+    protected static readonly int searchDeepth = 11;
 #endif
     // reference
     // https://github.com/lihongxun945/myblog/issues/13
@@ -40,7 +40,7 @@ public class MaxMinSearchAiEngine: BaseAIEngine
 #endif
         if (potentialPosList.Count == 0)
         {
-            // do sth
+            // do nothing, jump in global
         }
         else
         {
@@ -73,16 +73,16 @@ public class MaxMinSearchAiEngine: BaseAIEngine
     }
     private int MaxValueSearch(int deep, int alpha, int beta, TileCheckHelper tileCheckHelper)
     {
+        var nextTurn = (searchDeepth - deep) % 2 == 0 ? Global.WhoseTurn() :  - Global.WhoseTurn();
         // recursion end
-        // need Test
-        var currTurn = (searchDeepth - deep) % 2 == 0 ? Global.WhoseTurn() : - Global.WhoseTurn();
-        var currVal = EvaluateCurrBoardState(ref tileCheckHelper.tile, currTurn);
         // deep end
         if (deep <= 0)
         {
+            // var currTurn = - Global.WhoseTurn();
+            var currVal = EvaluateCurrBoardState(ref tileCheckHelper.tile, nextTurn);
 #if TEST
             Debug.LogFormat("[AI] deep: {0} currTurn {1} currVal: {2} myTurnNum: {3} enemyTurnNum: {4}",
-                deep, currTurn, currVal, myTurnNum, enemyTurnNum);
+                deep, nextTurn, currVal, myTurnNum, enemyTurnNum);
 #endif
             return currVal;
         }
@@ -91,7 +91,6 @@ public class MaxMinSearchAiEngine: BaseAIEngine
 #if TEST
         var bestPos = new Vector2Int();
 #endif
-        var nextTurn = - currTurn;
         var potentialPosList = GetPotentialPosList(tileCheckHelper, nextTurn);
 #if TEST
         Debug.LogFormat("[AI] deep: {0} pos List: {1}", deep, String.Join(" ", potentialPosList));
@@ -99,7 +98,10 @@ public class MaxMinSearchAiEngine: BaseAIEngine
         // recursion end
         if (potentialPosList.Count == 0)
         {
-            return currVal;
+            var newTile = tileCheckHelper.tile.Clone() as int[,];
+            var newTileCheckHelper = new TileCheckHelper(ref newTile);
+            // can not add new chess
+            bestVal = -MaxValueSearch(deep - 1, -beta, -alpha, newTileCheckHelper);
         }
         else
         {
@@ -128,7 +130,7 @@ public class MaxMinSearchAiEngine: BaseAIEngine
         }
 
 #if TEST
-            Debug.LogFormat("[AI] deep: {0} Pos: {1} bestVal: {2}", deep, bestPos, bestVal);
+        Debug.LogFormat("[AI] deep: {0} Pos: {1} bestVal: {2}", deep, bestPos, bestVal);
 #endif
         return bestVal;
     }

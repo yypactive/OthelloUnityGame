@@ -1,4 +1,4 @@
-// #define TEST
+#define TEST
 
 using System;
 using System.Collections;
@@ -18,6 +18,10 @@ public class MaxMinSearchAiEngine: BaseAIEngine
     // reference
     // https://github.com/lihongxun945/myblog/issues/13
 
+
+    protected static readonly int minVal = -100000;
+    protected static readonly int maxVal = 100000;
+
     protected override void IterateChessPos()
     {
         // main procedure
@@ -27,81 +31,105 @@ public class MaxMinSearchAiEngine: BaseAIEngine
 
     protected Vector2Int MaxMinValueSearch(int deep)
     {
-        var bestVal = int.MinValue;
+        var bestVal = minVal;
         var bestValPosList = new List<Vector2Int>();
         var currTurn = Global.WhoseTurn(); 
         var potentialPosList = GetPotentialPosList(Global.tileCheckHelper, currTurn);
-        foreach (var pos in potentialPosList)
+#if TEST
+        Debug.LogFormat("[AI] deep: {0} pos List: {1}", deep, String.Join(" ", potentialPosList));
+#endif
+        if (potentialPosList.Count == 0)
         {
-            // TODO
-            // add chess
-            var newTile = Global.tile.Clone() as int[,];
-            var tileCheckHelper = new TileCheckHelper(ref newTile);
-            tileCheckHelper.AddNewChess(pos.x, pos.y, currTurn);
-            var currVal = MinValueSearch(deep - 1, int.MinValue, int.MaxValue, tileCheckHelper);
-            if (currVal == bestVal)
-                bestValPosList.Add(pos);
-            else if (currVal > bestVal)
-            {
-                bestVal = currVal;
-                bestValPosList.Clear();
-                bestValPosList.Add(pos);
-            }
-            // TODO
-            // remove chess
-            if (CheckEnd())
-                break;
+            // do sth
         }
-        Debug.LogFormat("#AIEngine# bestVal: {0}", bestVal);
+        else
+        {
+            foreach (var pos in potentialPosList)
+            {
+                // TODO
+                // add chess
+                var newTile = Global.tile.Clone() as int[,];
+                var tileCheckHelper = new TileCheckHelper(ref newTile);
+                tileCheckHelper.AddNewChess(pos.x, pos.y, currTurn);
+                var currVal = -MaxValueSearch(deep - 1, -bestVal, minVal, tileCheckHelper);
+                if (currVal == bestVal)
+                    bestValPosList.Add(pos);
+                else if (currVal > bestVal)
+                {
+                    bestVal = currVal;
+                    bestValPosList.Clear();
+                    bestValPosList.Add(pos);
+                }
+                // TODO
+                // remove chess
+                if (CheckEnd())
+                    break;
+            }
+        }
+        Debug.LogFormat("[AI] deep: {0} bestVal: {1}", deep, bestVal);
         var ran = new System.Random();
         var finalPos = bestValPosList[ran.Next(bestValPosList.Count - 1)];
         return finalPos;
     }
-    private int MinValueSearch(int deep, int alpha, int beta, TileCheckHelper tileCheckHelper)
+    private int MaxValueSearch(int deep, int alpha, int beta, TileCheckHelper tileCheckHelper)
     {
         // recursion end
         // need Test
-        var currTurn = (searchDeepth - deep) % 2 == 1 ? Global.WhoseTurn() : - Global.WhoseTurn();
+        var currTurn = (searchDeepth - deep) % 2 == 0 ? Global.WhoseTurn() : - Global.WhoseTurn();
         var currVal = EvaluateCurrBoardState(ref tileCheckHelper.tile, currTurn);
-#if TEST
-        Debug.LogFormat("[AI] deep: {0} currTurn {1} currVal: {2} myTurnNum: {3} enemyTurnNum: {4}", 
-            deep, currTurn, currVal, myTurnNum, enemyTurnNum);
-#endif
+        // deep end
         if (deep <= 0)
         {
-            
+#if TEST
+            Debug.LogFormat("[AI] deep: {0} currTurn {1} currVal: {2} myTurnNum: {3} enemyTurnNum: {4}",
+                deep, currTurn, currVal, myTurnNum, enemyTurnNum);
+#endif
             return currVal;
         }
 
-        var bestVal = int.MinValue;
+        var bestVal = minVal;
+#if TEST
+        var bestPos = new Vector2Int();
+#endif
         var nextTurn = - currTurn;
         var potentialPosList = GetPotentialPosList(tileCheckHelper, nextTurn);
+#if TEST
+        Debug.LogFormat("[AI] deep: {0} pos List: {1}", deep, String.Join(" ", potentialPosList));
+#endif
         // recursion end
         if (potentialPosList.Count == 0)
         {
             return currVal;
         }
-        foreach (var pos in potentialPosList)
+        else
         {
-            var newTile = tileCheckHelper.tile.Clone() as int[,];
-            var newTileCheckHelper = new TileCheckHelper(ref newTile);
-            newTileCheckHelper.AddNewChess(pos.x, pos.y, nextTurn);
-            var newVal = MinValueSearch(deep - 1, -beta, -alpha, newTileCheckHelper) * (-1);
-#if TEST
-            Debug.LogFormat("[AI] deep: {0} Pos: {1} newVal: {2}", deep, pos, newVal);
+            foreach (var pos in potentialPosList)
+            {
+                var newTile = tileCheckHelper.tile.Clone() as int[,];
+                var newTileCheckHelper = new TileCheckHelper(ref newTile);
+                newTileCheckHelper.AddNewChess(pos.x, pos.y, nextTurn);
+                beta = Math.Max(bestVal, beta);
+                var newVal = -MaxValueSearch(deep - 1, -beta, -alpha, newTileCheckHelper);
+                if (newVal > bestVal)
+                {
+                    bestVal = newVal;
+#if TEST    
+                    bestPos = pos;
 #endif
-            if (newVal > bestVal)
-            {
-                bestVal = newVal;
-            }
-            alpha = Math.Max(bestVal, alpha);
+                }
 
-            // alpha-beta cut
-            if (newVal > beta || (searchDeepth-deep>1) && newVal == beta)
-            {
-                return newVal;
+                // alpha-beta cut
+                if (newVal > alpha || (searchDeepth-deep>1) && newVal == alpha)
+                {
+                    bestVal = maxVal;
+                    break;
+                }
             }
         }
+
+#if TEST
+            Debug.LogFormat("[AI] deep: {0} Pos: {1} bestVal: {2}", deep, bestPos, bestVal);
+#endif
         return bestVal;
     }
 }

@@ -1,4 +1,6 @@
-﻿using System.Collections;
+﻿#define TEST
+
+using System.Collections;
 using System.Collections.Generic;
 using System;
 using UnityEngine;
@@ -237,6 +239,7 @@ public class Global : MonoBehaviour {
     public static void JumpNextTurn()
     {
 #if TEST
+        LogCurrState();
         Debug.LogFormat("JumpNextTurn");
 #endif
 
@@ -280,4 +283,28 @@ public class Global : MonoBehaviour {
             }
         }
     }
+
+    public static void LogCurrState()
+    {
+        var myTurn = WhoseTurn();
+        var enemyTurn = - myTurn;
+        var myTurnNum = 0;
+        var enemyTurnNum = 0;
+        for (int i = 0; i < Global.tilesize; ++i)
+        {
+            for (int j = 0; j < Global.tilesize; ++j)
+            {
+                if (Global.tile[i, j] == myTurn)
+                {
+                    myTurnNum ++;
+                }
+                else if (Global.tile[i, j] == enemyTurn)
+                {
+                    enemyTurnNum ++;
+                }
+            }
+        }
+        Debug.LogFormat("[GLOBAL] Turn: {0} myTurnNum: {1} enemyTurnNum: {2}", myTurn, myTurnNum, enemyTurnNum);
+    }
+
 }
